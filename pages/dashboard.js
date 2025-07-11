@@ -1,36 +1,41 @@
 import Head from 'next/head';
-import { useRouter } from 'next/router';
-import { useState, useEffect } from 'react';
+import { useUser, withPageAuthRequired } from '@auth0/nextjs-auth0/client';
 
-export default function Dashboard() {
-  const router = useRouter();
-  const [currentUser, setCurrentUser] = useState(null);
+function Dashboard() {
+  const { user, error, isLoading } = useUser();
 
-  useEffect(() => {
-    const userData = localStorage.getItem('hylur_user');
-    if (!userData) {
-      router.push('/login');
-      return;
-    }
-
-    const user = JSON.parse(userData);
-    setCurrentUser(user);
-  }, [router]);
-
-  const logout = () => {
-    if (confirm('Are you sure you want to logout?')) {
-      localStorage.removeItem('hylur_user');
-      router.push('/login');
-    }
-  };
-
-  if (!currentUser) {
-    return <div>Loading...</div>;
+  if (isLoading) {
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh',
+        fontFamily: 'Inter, sans-serif'
+      }}>
+        Loading dashboard...
+      </div>
+    );
   }
 
-  const isHaukur = currentUser.email === 'haukur@hylur.net';
+  if (error) {
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh',
+        fontFamily: 'Inter, sans-serif'
+      }}>
+        Error: {error.message}
+      </div>
+    );
+  }
+
+  const isHaukur = user?.email === 'haukur@hylur.net';
   const firstName = isHaukur ? 'Haukur' : 'Leif';
   const initials = isHaukur ? 'HE' : 'LE';
+  const role = isHaukur ? 'Partnership & Strategy Lead' : 'Energy & Technology Lead';
 
   return (
     <>
@@ -151,6 +156,7 @@ export default function Dashboard() {
             cursor: pointer;
             font-size: 0.9rem;
             transition: all 0.2s ease;
+            text-decoration: none;
         }
 
         .logout-btn:hover {
@@ -208,6 +214,24 @@ export default function Dashboard() {
             margin-top: 1rem;
         }
 
+        .auth-info {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 2rem;
+            border: 1px solid var(--border-light);
+            margin-bottom: 2rem;
+        }
+
+        .auth-info h3 {
+            color: var(--text-dark);
+            margin-bottom: 1rem;
+        }
+
+        .auth-info p {
+            color: var(--text-light);
+            margin-bottom: 0.5rem;
+        }
+
         .coming-soon {
             background: var(--white);
             border-radius: 16px;
@@ -252,25 +276,36 @@ export default function Dashboard() {
         <div className="user-info">
           <div className="user-avatar">{initials}</div>
           <div className="user-details">
-            <h4>{currentUser.name}</h4>
-            <p>{currentUser.role}</p>
+            <h4>{user?.name || firstName}</h4>
+            <p>{role}</p>
           </div>
-          <button className="logout-btn" onClick={logout}>Logout</button>
+          <a href="/api/auth/logout" className="logout-btn">Logout</a>
         </div>
       </header>
 
       <main className="main-content">
         <div className="welcome-section">
           <h1 className="welcome-title">Welcome back, {firstName}!</h1>
-          <p className="welcome-subtitle">Your partnership dashboard</p>
-          <div className="role-badge">{currentUser.role}</div>
+          <p className="welcome-subtitle">Your secure partnership dashboard</p>
+          <div className="role-badge">{role}</div>
+        </div>
+
+        <div className="auth-info">
+          <h3>🔐 Auth0 Integration Active</h3>
+          <p><strong>Logged in as:</strong> {user?.email}</p>
+          <p><strong>Name:</strong> {user?.name || firstName}</p>
+          <p><strong>Auth Provider:</strong> Auth0</p>
+          <p><strong>Session:</strong> Secure & Encrypted</p>
         </div>
 
         <div className="coming-soon">
           <h3>📊 Dashboard Coming Soon</h3>
-          <p>Document management and AI analysis features are being developed. Stay tuned for the full platform!</p>
+          <p>Document management and AI analysis features are being developed. Your secure authentication is ready!</p>
         </div>
       </main>
     </>
   );
 }
+
+// Protect the dashboard route - requires authentication
+export default withPageAuthRequired(Dashboard);
