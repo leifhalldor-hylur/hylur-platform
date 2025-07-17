@@ -13,11 +13,6 @@ npm run build
 npm start
 ```
 
-## 🔐 Founder Login
-
-- **Haukur:** haukur@hylur.net / PPP2025!Strategy#Partnership  
-- **Leif:** leif@hylur.net / BESS2025!Energy#Technology
-
 ## 📁 Structure
 
 - `pages/index.js` - Homepage
