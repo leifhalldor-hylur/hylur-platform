@@ -1,244 +1,191 @@
-import Head from 'next/head';
-import { useUser } from '@auth0/nextjs-auth0/client';
-import { useRouter } from 'next/router';
-import { useEffect } from 'react';
+import { signIn, getSession } from "next-auth/react"
+import { useRouter } from "next/router"
+import { useEffect, useState } from "react"
+import Head from "next/head"
 
 export default function Login() {
-  const { user, error, isLoading } = useUser();
-  const router = useRouter();
+  const router = useRouter()
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('')
 
   useEffect(() => {
-    if (user) {
-      // Check if user is a founder
-      const founderEmails = ['haukur@hylur.net', 'leif@hylur.net'];
-      
-      if (founderEmails.includes(user.email)) {
-        router.push('/dashboard');
-      } else {
-        // Redirect non-founders - they shouldn't have access
-        alert('Access denied. This portal is for HYLUR founders only.');
-        router.push('/api/auth/logout');
+    getSession().then((session) => {
+      if (session) {
+        router.push('/dashboard')
       }
+    })
+
+    if (router.query.error) {
+      setError('Authentication failed. Please ensure you are using your @hylur.net email.')
     }
-  }, [user, router]);
+  }, [router])
 
-  if (isLoading) {
-    return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100vh',
-        fontFamily: 'Inter, sans-serif'
-      }}>
-        Loading...
-      </div>
-    );
-  }
+  const handleGoogleSignIn = async () => {
+    setIsLoading(true)
+    setError('')
+    
+    try {
+      const result = await signIn('google', {
+        callbackUrl: router.query.callbackUrl || '/dashboard',
+        redirect: false
+      })
 
-  if (error) {
-    return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100vh',
-        fontFamily: 'Inter, sans-serif'
-      }}>
-        Error: {error.message}
-      </div>
-    );
+      if (result?.error) {
+        setError('Authentication failed. Please ensure you are using your @hylur.net email.')
+      }
+    } catch (error) {
+      setError('An unexpected error occurred. Please try again.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
     <>
       <Head>
-        <title>HYLUR - Login</title>
-        <meta name="description" content="HYLUR Founder Access Portal" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Login - Hylur BESS Platform</title>
+        <meta name="description" content="Sign in to Hylur Battery Energy Storage Systems platform" />
+        <link rel="icon" href="/favicon.ico" />
       </Head>
+      
+      <div style={{
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '1rem'
+      }}>
+        <div style={{
+          maxWidth: '400px',
+          width: '100%',
+          background: 'white',
+          padding: '2rem',
+          borderRadius: '1rem',
+          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+        }}>
+          {/* Hylur Logo and Header */}
+          <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+            <div style={{
+              margin: '0 auto 1rem',
+              height: '4rem',
+              width: '4rem',
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              borderRadius: '1rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <span style={{ color: 'white', fontWeight: 'bold', fontSize: '1.5rem' }}>H</span>
+            </div>
+            <h2 style={{ fontSize: '2rem', fontWeight: 'bold', color: '#1a202c', margin: 0 }}>
+              Welcome to Hylur
+            </h2>
+            <p style={{ marginTop: '0.5rem', color: '#718096' }}>
+              Battery Energy Storage Systems Platform
+            </p>
+          </div>
 
-      <style jsx global>{`
-        :root {
-            --primary-navy: #2c3e50;
-            --wave-teal: #48c9b0;
-            --wave-blue: #5dade2;
-            --wave-green: #58d68d;
-            --text-dark: #2c3e50;
-            --text-light: #7f8c8d;
-            --white: #ffffff;
-            --border-light: #e9ecef;
-        }
+          {/* Error Message */}
+          {error && (
+            <div style={{
+              marginBottom: '1.5rem',
+              padding: '1rem',
+              background: '#fed7d7',
+              border: '1px solid #feb2b2',
+              borderRadius: '0.5rem'
+            }}>
+              <p style={{ color: '#c53030', fontSize: '0.875rem', margin: 0 }}>{error}</p>
+            </div>
+          )}
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: linear-gradient(135deg, var(--primary-navy) 0%, #34495e 50%, #3498db 100%);
-            color: var(--text-dark);
-            line-height: 1.6;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 1rem;
-        }
+          {/* Google Sign In Button */}
+          <button
+            onClick={handleGoogleSignIn}
+            disabled={isLoading}
+            style={{
+              width: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '0.75rem 1rem',
+              border: '1px solid #d2d6dc',
+              borderRadius: '0.5rem',
+              background: 'white',
+              color: '#374151',
+              cursor: isLoading ? 'not-allowed' : 'pointer',
+              opacity: isLoading ? 0.5 : 1,
+              transition: 'all 0.2s',
+              fontSize: '1rem',
+              fontWeight: '500'
+            }}
+          >
+            {isLoading ? (
+              <div style={{
+                width: '1.25rem',
+                height: '1.25rem',
+                border: '2px solid #667eea',
+                borderTop: '2px solid transparent',
+                borderRadius: '50%',
+                animation: 'spin 1s linear infinite'
+              }}></div>
+            ) : (
+              <>
+                <svg style={{ width: '1.25rem', height: '1.25rem', marginRight: '0.75rem' }} viewBox="0 0 24 24">
+                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+                Sign in with Google Workspace
+              </>
+            )}
+          </button>
 
-        .login-container {
-            background: var(--white);
-            border-radius: 20px;
-            padding: 3rem;
-            max-width: 400px;
-            width: 100%;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            position: relative;
-            overflow: hidden;
-            text-align: center;
-        }
+          {/* Domain Notice */}
+          <p style={{ marginTop: '1rem', fontSize: '0.75rem', textAlign: 'center', color: '#9ca3af' }}>
+            Only @hylur.net email addresses are allowed
+          </p>
 
-        .login-container::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, var(--wave-blue), var(--wave-teal), var(--wave-green));
-        }
+          {/* Features Preview */}
+          <div style={{ marginTop: '2rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.75rem' }}>
+              <div style={{ width: '0.5rem', height: '0.5rem', background: '#10b981', borderRadius: '50%', marginRight: '0.75rem' }}></div>
+              Real-time BESS monitoring
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.75rem' }}>
+              <div style={{ width: '0.5rem', height: '0.5rem', background: '#3b82f6', borderRadius: '50%', marginRight: '0.75rem' }}></div>
+              AI-powered analytics
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', fontSize: '0.875rem', color: '#6b7280' }}>
+              <div style={{ width: '0.5rem', height: '0.5rem', background: '#8b5cf6', borderRadius: '50%', marginRight: '0.75rem' }}></div>
+              Document management
+            </div>
+          </div>
+        </div>
+      </div>
 
-        .logo-container {
-            background: #f5f5f0;
-            border: 3px solid var(--primary-navy);
-            border-radius: 20px;
-            padding: 1rem 1.5rem;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.8rem;
-            position: relative;
-            overflow: hidden;
-            margin-bottom: 1rem;
-        }
-
-        .logo-icon {
-            width: 40px;
-            height: 40px;
-            background: var(--primary-navy);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            z-index: 3;
-        }
-
-        .logo-icon::after {
-            content: '⚡';
-            font-size: 1.4rem;
-            color: white;
-        }
-
-        .logo-text {
-            font-size: 1.8rem;
-            font-weight: 800;
-            color: var(--primary-navy);
-            z-index: 3;
-            position: relative;
-        }
-
-        .logo-waves {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 15px;
-            background: linear-gradient(90deg, var(--wave-blue), var(--wave-teal), var(--wave-green));
-            clip-path: polygon(0% 30%, 10% 70%, 20% 30%, 30% 70%, 40% 30%, 50% 70%, 60% 30%, 70% 70%, 80% 30%, 90% 70%, 100% 30%, 100% 100%, 0% 100%);
-        }
-
-        .founder-badge {
-            background: linear-gradient(135deg, var(--wave-blue), var(--wave-teal));
-            color: white;
-            padding: 0.3rem 0.8rem;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 2rem;
-        }
-
-        .login-title {
-            font-size: 1.6rem;
-            font-weight: 600;
-            color: var(--text-dark);
-            margin-bottom: 0.5rem;
-        }
-
-        .login-subtitle {
-            color: var(--text-light);
-            font-size: 0.95rem;
-            margin-bottom: 2rem;
-        }
-
-        .auth0-btn {
-            background: linear-gradient(135deg, var(--wave-teal), var(--wave-blue));
-            color: white;
-            padding: 1rem 2rem;
-            border: none;
-            border-radius: 12px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-block;
-            width: 100%;
-            margin-bottom: 2rem;
-        }
-
-        .auth0-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 8px 25px rgba(72, 201, 176, 0.3);
-        }
-
-        .back-home {
-            color: var(--text-light);
-            text-decoration: none;
-            font-size: 0.9rem;
-            padding-top: 1.5rem;
-            border-top: 1px solid var(--border-light);
-            display: block;
-        }
-
-        .back-home:hover {
-            color: var(--wave-teal);
-        }
-
-        @media (max-width: 480px) {
-            .login-container {
-                padding: 2rem 1.5rem;
-                margin: 1rem;
-            }
+      <style jsx>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
         }
       `}</style>
-
-      <div className="login-container">
-        <div className="logo-container">
-          <div className="logo-icon"></div>
-          <div className="logo-text">HYLUR</div>
-          <div className="logo-waves"></div>
-        </div>
-        <div className="founder-badge">Founder Access</div>
-
-        <h1 className="login-title">Welcome Back</h1>
-        <p className="login-subtitle">Secure authentication powered by Auth0</p>
-
-        <a href="/api/auth/login" className="auth0-btn">
-          Sign In to HYLUR Platform
-        </a>
-
-        <a href="/" className="back-home">← Back to Homepage</a>
-      </div>
     </>
-  );
+  )
+}
+
+export async function getServerSideProps(context) {
+  const session = await getSession(context)
+  
+  if (session) {
+    return {
+      redirect: {
+        destination: '/dashboard',
+        permanent: false,
+      },
+    }
+  }
+
+  return { props: {} }
 }

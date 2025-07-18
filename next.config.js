@@ -2,38 +2,17 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
-  
-  async redirects() {
+  images: {
+    domains: ['lh3.googleusercontent.com'],
+  },
+  async rewrites() {
     return [
       {
-        source: '/home',
-        destination: '/',
-        permanent: true,
-      },
-    ];
-  },
-  
-  async headers() {
-    return [
-      {
-        source: '/(.*)',
-        headers: [
-          {
-            key: 'X-Frame-Options',
-            value: 'DENY',
-          },
-          {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff',
-          },
-          {
-            key: 'Referrer-Policy',
-            value: 'strict-origin-when-cross-origin',
-          },
-        ],
-      },
-    ];
-  },
-};
+        source: '/favicon.ico',
+        destination: '/api/favicon'
+      }
+    ]
+  }
+}
 
-module.exports = nextConfig;
+module.exports = nextConfig

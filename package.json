@@ -1,26 +1,55 @@
 {
-  "name": "hylur-platform",
-  "version": "0.1.0",
-  "private": true,
+  "name": "hylur-bess-platform",
+  "version": "1.0.0",
+  "description": "Advanced Battery Energy Storage Systems platform with document management and AI analysis capabilities",
+  "main": "index.js",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev --name init",
+    "db:reset": "prisma migrate reset --force",
+    "db:studio": "prisma studio",
+    "db:seed": "node prisma/seed.js",
+    "setup:complete": "npm run db:generate && npm run db:migrate && npm run db:seed"
   },
   "dependencies": {
-    "@auth0/auth0-react": "^2.3.0",
-    "@auth0/nextjs-auth0": "^3.2.0",
-    "next": "^15.3.5",
-    "react": "^18",
-    "react-dom": "^18"
+    "next": "^14.0.4",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "next-auth": "^4.24.5",
+    "@next-auth/prisma-adapter": "^1.0.7",
+    "@prisma/client": "^5.7.1",
+    "prisma": "^5.7.1",
+    "bcryptjs": "^2.4.3"
   },
   "devDependencies": {
-    "@types/node": "^20",
-    "@types/react": "^18",
-    "@types/react-dom": "^18",
-    "eslint": "^8",
-    "eslint-config-next": "14.0.4",
-    "typescript": "^5"
-  }
+    "eslint": "^8.56.0",
+    "eslint-config-next": "^14.0.4"
+  },
+  "keywords": [
+    "battery",
+    "energy-storage",
+    "bess",
+    "nextjs",
+    "authentication",
+    "hylur"
+  ],
+  "authors": [
+    {
+      "name": "Haukur",
+      "email": "haukur@hylur.net",
+      "role": "Co-Founder & CEO",
+      "expertise": "Business Development - 8+ years Energy Sector Experience"
+    },
+    {
+      "name": "Leif",
+      "email": "leif@hylur.net",
+      "role": "Co-Founder & COO",
+      "expertise": "Mechatronics Engineering - Energy Systems & AI Implementation"
+    }
+  ],
+  "license": "MIT"
 }
